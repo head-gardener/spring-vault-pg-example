@@ -1,0 +1,88 @@
+configs:
+  vault.hcl:
+    content: |
+      ui            = true
+      cluster_addr  = "https://127.0.0.1:8201"
+      api_addr      = "https://127.0.0.1:8200"
+
+      listener "tcp" {
+        address       = "0.0.0.0:8200"
+        tls_cert_file = "/certs/vault-cert.pem"
+        tls_key_file  = "/certs/vault-key.pem"
+        tls_min_version = "tls13"
+        tls_disable_client_certs = true
+      }
+
+services:
+  certgen:
+    image: eclipse-temurin:17-jre-ubi9-minimal
+    profiles: [ "keygen" ]
+    volumes:
+      - ./certs1:/certs
+      - ./scripts:/scripts
+    entrypoint: ''
+    command: sh /scripts/mkcerts.sh
+
+  vault:
+    image: hashicorp/vault:1.18
+    container_name: vault
+    ports:
+      - "8200:8200"
+    volumes:
+      - ./certs:/certs
+    cap_add:
+      - IPC_LOCK
+    configs:
+      - vault.hcl
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: root
+      # we reroute default dev listener to 8300 because it's unconfigurable
+      # actual tcp listener with tls is in the config
+      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8300"
+    command: server -dev -config /vault.hcl
+
+  terraform:
+    image: hashicorp/terraform
+    volumes:
+      - ./terraform:/terraform
+      - ./certs:/certs
+    environment:
+      TF_VAR_vault_host: vault
+    command: -chdir=terraform apply -auto-approve
+    depends_on:
+      - vault
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: example
+      POSTGRES_DB: dbtest
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: psql -U admin -d dbtest -c 'SELECT 1;'
+
+  app:
+    build:
+      context: ./app
+    container_name: spring-app
+    volumes:
+      - ./certs:/certs
+    environment:
+      SPRING_CLOUD_VAULT_URI: https://vault:8200
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/dbtest
+      SPRING_CLOUD_VAULT_SSL_KEYSTORE: file:/certs/app-keystore.jsk
+    depends_on:
+      - vault
+      - postgres
+    ports:
+      - 8080:8080
+    healthcheck:
+      test: curl -f http://localhost:8080
+
+networks:
+  default:
+    driver: bridge
+
