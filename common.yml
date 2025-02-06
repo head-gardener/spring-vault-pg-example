@@ -1,0 +1,8 @@
+services:
+  terraform:
+    image: hashicorp/terraform
+    volumes:
+      - ./certs:/certs
+    environment:
+      TF_VAR_vault_host: vault
+    command: -chdir=terraform apply -auto-approve -input=false

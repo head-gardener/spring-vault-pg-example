@@ -1,4 +1,4 @@
 app/target/
-terraform/.terraform
-terraform/terraform.tfstate*
+**/.terraform/
+**/terraform.tfstate*
 certs/

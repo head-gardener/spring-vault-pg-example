@@ -52,20 +52,26 @@ services:
         # restart ignores `condition`, see https://github.com/docker/compose/issues/12098
         # restart: true
 
-  terraform:
-    image: hashicorp/terraform
+  tf_db_engine:
+    extends:
+      file: ./common.yml
+      service: terraform
     volumes:
-      - ./terraform:/terraform
-      - ./certs:/certs
-    environment:
-      TF_VAR_vault_host: vault
-    command: -chdir=terraform apply -auto-approve
+      - ./terraform/db_engine:/terraform
     depends_on:
       vault:
         condition: service_healthy
-        restart: true
-      # pg needs to be running when we create db engine
       postgres:
+        condition: service_healthy
+
+  tf_pki:
+    extends:
+      file: ./common.yml
+      service: terraform
+    volumes:
+      - ./terraform/pki:/terraform
+    depends_on:
+      vault:
         condition: service_healthy
 
   postgres:
@@ -77,9 +83,20 @@ services:
       POSTGRES_DB: dbtest
     ports:
       - "5432:5432"
+    volumes:
+      - ./certs:/certs
+    command: >-
+      -c ssl=on
+      -c ssl_cert_file=/certs/postgres-cert.pem
+      -c ssl_key_file=/certs/postgres-key.pem
+      -c log_connections=on
     healthcheck:
-      test: psql -U admin -d dbtest -c 'SELECT 1;'
-      interval: 5s
+      test: psql -U admin -d dbtest -h localhost -c 'SELECT 1;'
+      interval: 30s
+      start_interval: 5s
+    depends_on:
+      tf_pki:
+        condition: service_completed_successfully
 
   app:
     build:
@@ -89,7 +106,7 @@ services:
       - ./certs:/certs
     environment:
       SPRING_CLOUD_VAULT_URI: https://vault:8200
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/dbtest
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/dbtest?sslmode=verify-ca&sslrootcert=/certs/vault-pki-ca.pem
       SPRING_CLOUD_VAULT_SSL_KEYSTORE: file:/certs/app-keystore.jks
     ports:
       - 8080:8080
@@ -101,7 +118,7 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-      terraform:
+      tf_db_engine:
         condition: service_completed_successfully
 
 networks:
