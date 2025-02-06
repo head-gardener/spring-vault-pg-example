@@ -1,14 +1,16 @@
 package com.example;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 
 @SpringBootApplication
@@ -45,7 +47,8 @@ class DataSourceTest {
             Integer result = jdbcTemplate.queryForObject("SELECT 1", Integer.class);
             return "DataSource is working! Query result: " + result;
         } catch (Exception e) {
-            return "DataSource is NOT working: " + e.getMessage();
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                "DataSource is NOT working: " + e.getMessage());
         }
     }
 }

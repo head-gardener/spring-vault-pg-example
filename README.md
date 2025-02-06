@@ -7,9 +7,9 @@ This repository contains:
 - Terraform job for configuring vault (`terraform`)
 - A job for generating certs used for connecting to Vault (`certgen`)
 - Vault:
- - running in dev mode
- - with a TLS listener
- - running a database engine for generating ephemeral postgres creds
+  - running in dev mode
+  - with a TLS listener
+  - running a database engine for generating ephemeral postgres creds
 
 # Purpose
 
@@ -29,15 +29,13 @@ This example **doesn't**:
 
 # Execution order
 
-To confirm that the example is working:
+To confirm that the example is working just run `docker compose up` and wait
+until application passes its healthcheck. This will
 
-1. `docker compose up certgen` - generate Vault's certificates. You need to do
-   this **before** doing anything else and only **once**.
-1. `docker compose up vault terraform` - start Vault and apply Terraform
-   configuration.
-1. `docker compose up postgres app --wait` - start everything else. Once the
-   `app` container passes the healthcheck Spring has connected to Postges
-   successfully.
+1. Generate certificates and truststore with in `certgen`.
+1. Launch Vault and Postgres.
+1. Configure Vault with Terraform.
+1. Start Spring application and wait for its healthcheck.
 
 # Details
 
