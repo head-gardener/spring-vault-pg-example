@@ -90,7 +90,7 @@ services:
     environment:
       SPRING_CLOUD_VAULT_URI: https://vault:8200
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/dbtest
-      SPRING_CLOUD_VAULT_SSL_KEYSTORE: file:/certs/app-keystore.jsk
+      SPRING_CLOUD_VAULT_SSL_KEYSTORE: file:/certs/app-keystore.jks
     ports:
       - 8080:8080
     healthcheck:

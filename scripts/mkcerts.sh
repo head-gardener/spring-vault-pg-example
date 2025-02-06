@@ -27,10 +27,10 @@ openssl x509 -req \
   -copy_extensions copy
 
 # Truststore for Java
-rm -f app-keystore.jsk
+rm -f app-keystore.jks
 keytool -importcert \
   -file /certs/ca-cert.pem \
-  -keystore app-keystore.jsk \
+  -keystore app-keystore.jks \
   -alias vault-ca \
   -trustcacerts \
   -noprompt \

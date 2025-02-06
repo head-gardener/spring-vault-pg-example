@@ -41,6 +41,6 @@ until application passes its healthcheck. This will
 
 ## Spring
 
-Turn `pem` certs into `jsk` truststore for Java. Use
+Turn `pem` certs into `jks` truststore for Java. Use
 `spring-cloud-starter-vault-config` (i.e. Spring Cloud Vault) for sourcing
 properties from Vault.
