@@ -36,16 +36,16 @@ resource "tls_self_signed_cert" "ca" {
   private_key_pem = tls_private_key.ca.private_key_pem
 
   validity_period_hours = 8760
-  early_renewal_hours = 168
+  early_renewal_hours   = 168
 
   is_ca_certificate = true
-  allowed_uses      = [
+  allowed_uses = [
     "cert_signing",
     "crl_signing",
   ]
 
   subject {
-    common_name  = "Vault TLS CA"
+    common_name = "Vault TLS CA"
   }
 
   set_subject_key_id = true
@@ -79,7 +79,7 @@ resource "tls_locally_signed_cert" "vault" {
   ca_cert_pem        = tls_self_signed_cert.ca.cert_pem
 
   validity_period_hours = 768
-  early_renewal_hours = 48
+  early_renewal_hours   = 48
 
   allowed_uses = [
     "key_encipherment",

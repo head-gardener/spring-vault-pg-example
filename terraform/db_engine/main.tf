@@ -1,13 +1,13 @@
 terraform {
   required_providers {
     vault = {
-      source = "hashicorp/vault"
+      source  = "hashicorp/vault"
       version = "~> 4.6.0"
     }
   }
 }
 
-provider "vault" { }
+provider "vault" {}
 
 // DB ENGINE
 
@@ -20,7 +20,7 @@ resource "vault_database_secrets_mount" "db" {
     password          = "example"
     connection_url    = "postgresql://{{username}}:{{password}}@postgres:5432/dbtest?sslmode=verify-ca&sslrootcert=/certs/vault-pki-ca.pem"
     verify_connection = true
-    allowed_roles     = [
+    allowed_roles = [
       "dev",
     ]
   }
