@@ -45,6 +45,6 @@ creation - should have `SSL enabled` via `TLSv1.3`.
 
 ## Spring
 
-Turn `pem` certs into `jks` truststore for Java. Use
-`spring-cloud-starter-vault-config` (i.e. Spring Cloud Vault) for sourcing
-properties from Vault. Configure credential expiration handling.
+Use `spring-cloud-starter-vault-config` (i.e. Spring Cloud Vault) for sourcing
+properties from Vault, `spring-cloud-vault-config-databases` for database
+engine. Configure credential expiration handling.

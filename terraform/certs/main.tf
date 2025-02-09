@@ -8,10 +8,6 @@ terraform {
       source  = "hashicorp/local"
       version = "~> 2.5.2"
     }
-    jks = {
-      source  = "paragor/jks"
-      version = "~> 0.9.0"
-    }
   }
   backend "local" {
     path = "/certs/tfstate"
@@ -19,9 +15,6 @@ terraform {
 }
 
 provider "tls" {
-}
-
-provider "jks" {
 }
 
 provider "local" {
@@ -95,13 +88,6 @@ resource "tls_locally_signed_cert" "vault" {
   ]
 }
 
-resource "jks_trust_store" "ca" {
-  certificates = [
-    tls_self_signed_cert.ca.cert_pem
-  ]
-  password = "vault-ca"
-}
-
 resource "local_sensitive_file" "vault_pkey" {
   filename        = "/certs/vault-key.pem"
   content         = tls_private_key.vault.private_key_pem
@@ -122,12 +108,6 @@ resource "local_sensitive_file" "vault_pkey" {
 resource "local_file" "ca" {
   filename        = "/certs/ca-cert.pem"
   content         = tls_locally_signed_cert.vault.cert_pem
-  file_permission = "0644"
-}
-
-resource "local_file" "ca_trust_store" {
-  filename        = "/certs/app-keystore.jks"
-  content_base64  = jks_trust_store.ca.jks
   file_permission = "0644"
 }
 
