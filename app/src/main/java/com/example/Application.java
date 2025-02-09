@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
-
+import java.util.List;
 
 @SpringBootApplication
 public class Application {
@@ -20,23 +20,13 @@ public class Application {
     }
 }
 
-@Component
-class Props implements CommandLineRunner {
+@RestController
+class DataSourceTest {
     @Value("${spring.datasource.username}")
     private String username;
 
     @Value("${spring.datasource.password}")
     private String password;
-
-    @Override
-    public void run(String... args) throws Exception {
-        System.out.println("Username: " + username);
-        System.out.println("Password: " + password);
-    }
-}
-
-@RestController
-class DataSourceTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -44,8 +34,11 @@ class DataSourceTest {
     @RequestMapping("/")
     public String index(String... args) {
         try {
-            Integer result = jdbcTemplate.queryForObject("SELECT 1", Integer.class);
-            return "DataSource is working! Query result: " + result;
+            List<Integer> result = jdbcTemplate.queryForList("SELECT * FROM numbers", Integer.class);
+            return "DataSource is working! "
+              + "Username " + username
+              + ", Password: " + password
+              + ", Query result: " + result;
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                 "DataSource is NOT working: " + e.getMessage());

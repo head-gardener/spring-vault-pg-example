@@ -11,22 +11,9 @@ terraform {
   }
 }
 
-provider "local" {
-}
+provider "local" { }
 
-variable "vault_token" {
-  default = "root"
-}
-
-variable "vault_host" {
-  default = "localhost"
-}
-
-provider "vault" {
-  address = "https://${var.vault_host}:8200"
-  ca_cert_file = "/certs/vault-cert.pem"
-  token = var.vault_token
-}
+provider "vault" { }
 
 // PKI
 

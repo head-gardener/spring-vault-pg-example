@@ -2,24 +2,12 @@ terraform {
   required_providers {
     vault = {
       source = "hashicorp/vault"
-      version = "4.4.0"
+      version = "~> 4.6.0"
     }
   }
 }
 
-variable "vault_token" {
-  default = "root"
-}
-
-variable "vault_host" {
-  default = "localhost"
-}
-
-provider "vault" {
-  address = "https://${var.vault_host}:8200"
-  ca_cert_file = "/certs/vault-cert.pem"
-  token = var.vault_token
-}
+provider "vault" { }
 
 // DB ENGINE
 
@@ -39,9 +27,11 @@ resource "vault_database_secrets_mount" "db" {
 }
 
 resource "vault_database_secret_backend_role" "dev" {
-  name    = "dev"
-  backend = vault_database_secrets_mount.db.path
-  db_name = vault_database_secrets_mount.db.postgresql[0].name
+  name        = "dev"
+  backend     = vault_database_secrets_mount.db.path
+  db_name     = vault_database_secrets_mount.db.postgresql[0].name
+  max_ttl     = 2678400 # month
+  default_ttl = 2678400
   creation_statements = [
     "CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}';",
     "GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"{{name}}\";",

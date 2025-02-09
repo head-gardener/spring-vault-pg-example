@@ -2,3 +2,4 @@ app/target/
 **/.terraform/
 **/terraform.tfstate*
 certs/
+!terraform/certs
