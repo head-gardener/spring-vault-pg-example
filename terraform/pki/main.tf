@@ -59,33 +59,7 @@ resource "vault_pki_secret_backend_role" "postgres" {
   allow_ip_sans      = false
 }
 
-resource "vault_pki_secret_backend_cert" "postgres" {
-  issuer_ref  = vault_pki_secret_backend_issuer.vault_pki_ca.issuer_ref
-  backend     = vault_pki_secret_backend_role.postgres.backend
-  name        = vault_pki_secret_backend_role.postgres.name
-  common_name = "postgres"
-  alt_names   = ["postgres", "localhost"]
-  ttl         = 3600
-  revoke      = true
-}
-
-resource "local_sensitive_file" "postgres_pkey" {
-  filename        = "/certs/postgres-key.pem"
-  content         = vault_pki_secret_backend_cert.postgres.private_key
-  file_permission = "0600"
-
-  # postgres user in the pg container, postgresql needs it
-  provisioner "local-exec" {
-    command = "chown 999:999 ${local_sensitive_file.postgres_pkey.filename}"
-  }
-}
-
 resource "local_file" "ca" {
   filename = "/certs/vault-pki-ca.pem"
-  content  = vault_pki_secret_backend_cert.postgres.ca_chain
-}
-
-resource "local_file" "postgres_cert" {
-  filename = "/certs/postgres-cert.pem"
-  content  = vault_pki_secret_backend_cert.postgres.certificate
+  content  = vault_pki_secret_backend_root_cert.vault_pki_ca.certificate
 }

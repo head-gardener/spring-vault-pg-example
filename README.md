@@ -10,6 +10,8 @@ This repository contains:
   - running in dev mode
   - with a TLS listener
   - running a database engine for generating ephemeral postgres creds
+  - running a PKI
+- Vault agent for certs
 
 # Purpose
 
@@ -33,8 +35,8 @@ To confirm that the example is working just run `docker compose up` and wait
 until application passes its healthcheck. This will
 
 1. Generate certificates and truststore.
-1. Launch Vault, create PKI on it with Terraform, generate Postgres certificates.
-1. Launch Postgres, configure and verify Vault's database engine.
+1. Launch Vault, create PKI on it with Terraform.
+1. Launch agent and Postgres, configure and verify Vault's database engine.
 1. Start Spring application and wait for its healthcheck.
 
 After that look through Postgres's connection logs. All connections - including

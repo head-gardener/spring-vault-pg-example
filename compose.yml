@@ -1,3 +1,6 @@
+volumes:
+  pg-cert-share:
+
 configs:
   vault.hcl:
     content: |
@@ -19,6 +22,9 @@ configs:
     content: |
       CREATE TABLE IF NOT EXISTS numbers (id INTEGER PRIMARY KEY);
       INSERT INTO numbers (id) VALUES (1), (2), (3), (4), (5);
+
+  pg-agent.hcl:
+    file: ./config/pg-agent.hcl
 
 services:
   vault:
@@ -82,6 +88,38 @@ services:
       vault:
         condition: service_healthy
 
+  agent:
+    image: hashicorp/vault:1.18
+    container_name: vault-agent
+    volumes:
+      - ./certs:/certs
+      - pg-cert-share:/pg-certs
+    user: root
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_TOKEN: "root"
+      VAULT_ADDR: "https://vault:8200"
+      VAULT_CACERT: "/certs/ca-cert.pem"
+    restart: always
+    configs:
+      - pg-agent.hcl
+    command: |
+      sh -c '
+        set -e
+        [ -n "$VAULT_TOKEN" ] || { echo "Empty token!"; exit 1; }
+        echo "$VAULT_TOKEN" > /token
+        rm -f /pg-certs/postgres-bundle.pem
+        exec vault agent -config=/pg-agent.hcl
+      '
+    healthcheck:
+      test: 'stat /tmp/token'
+      interval: 2m
+      start_period: 30s
+    depends_on:
+      tf_pki:
+        condition: service_completed_successfully
+
   postgres:
     image: postgres:latest
     container_name: postgres
@@ -92,14 +130,14 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./certs:/certs
+      - pg-cert-share:/pg-certs:ro
     configs:
       - source: init.sql
         target: /docker-entrypoint-initdb.d/init.sql
     command: >-
       -c ssl=on
-      -c ssl_cert_file=/certs/postgres-cert.pem
-      -c ssl_key_file=/certs/postgres-key.pem
+      -c ssl_cert_file=/pg-certs/postgres-bundle.pem
+      -c ssl_key_file=/pg-certs/postgres-bundle.pem
       -c log_connections=on
     healthcheck:
       test: psql -U admin -d dbtest -h localhost -c 'SELECT 1;'
@@ -107,8 +145,8 @@ services:
       start_interval: 3s
       start_period: 30s
     depends_on:
-      tf_pki:
-        condition: service_completed_successfully
+      agent:
+        condition: service_healthy
 
   app:
     build:
